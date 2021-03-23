@@ -1,0 +1,15 @@
+---
+- name: Verify
+  hosts: all
+
+  tasks:
+    - name: Collect package facts.
+      package_facts:
+        manager: "auto"
+
+    - name: Verify Packer is installed.
+      assert:
+        that:
+          - "'packer' in ansible_facts.packages"
+        success_msg: "Packer is installed."
+        fail_msg: "Packer is not installed."

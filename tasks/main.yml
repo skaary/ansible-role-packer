@@ -1,0 +1,21 @@
+---
+- name: ensure gpg-agent exists
+  apt:
+    name: gpg-agent
+    state: present
+
+- name: add gpg key for packer
+  apt_key:
+    url: "{{ gpg_key }}"
+    state: present
+  become: true
+#
+- name: add the official HashiCorp Linux repository
+  apt_repository:
+    repo: "{{ hashicorp_repo }}"
+
+- name: install packer
+  apt:
+    update_cache: true
+    name: packer
+    state: present
