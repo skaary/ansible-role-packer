@@ -3,19 +3,47 @@
   apt:
     name: gpg-agent
     state: present
+  become: true
 
 - name: add gpg key for packer
   apt_key:
     url: "{{ gpg_key }}"
     state: present
   become: true
-#
+
+- name: determine whether it's Ubuntu or Linux Mint
+  set_fact:
+    distribution: "{{ ansible_distribution | lower }}"
+
+- name: fetch Ubuntu codename | Linux Mint
+  shell: sed 's/UBUNTU_CODENAME=//;t;d' /etc/os-release
+  register: os_release
+  run_once: true
+  when: distribution == "linux mint"
+
+- name: set_fact for codename | Linux Mint
+  set_fact:
+    codename: "{{ os_release.stdout }}"
+  when: distribution == "linux mint"
+
+- name: set_fact for hashicorp_repo | Linux Mint
+  set_fact:
+    hashicorp_repo: deb [arch=amd64] https://apt.releases.hashicorp.com {{ codename }} main
+  when: distribution == "linux mint"
+
+- name: set_fact for hashicorp_repo | Ubuntu
+  set_fact:
+    hashicorp_repo: deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_facts['lsb']['codename'] }} main
+  when: distribution == "ubuntu"
+
 - name: add the official HashiCorp Linux repository
   apt_repository:
     repo: "{{ hashicorp_repo }}"
+  become: true
 
 - name: install packer
   apt:
     update_cache: true
     name: packer
     state: present
+  become: true
